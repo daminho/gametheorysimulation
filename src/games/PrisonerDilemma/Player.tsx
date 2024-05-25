@@ -1,0 +1,149 @@
+import React, { useEffect, useState } from "react";
+import { FidgetSpinner } from "react-loader-spinner";
+import { JsxElement } from "typescript";
+import Menu from "@mui/material/Menu"
+import MenuItem from "@mui/material/MenuItem"
+import MenuList from "@mui/material/MenuList"
+import { FormControl, InputLabel, Select, SelectChangeEvent } from "@mui/material";
+
+export enum PlayerStatus {
+    LOADING = 0,
+    JUST_CREATED = 1,
+    SAVED = 2
+}
+
+
+export enum Strategy {
+    ALL_CHEAT = 0,
+    ALL_COOPERATE = 1,
+    GRUDGER = 2,
+    DETECTIVE = 3,
+    SIMPLETON = 4,
+    RANDOM = 5,
+    SECRETE = 6,
+}
+
+const StrategyName = [
+    "All Cheat",
+    "All Cooperate",
+    "Grudger",
+    "Detective",
+    "Simpleton",
+    "Random",
+    "Secrete"
+]
+
+const NameToEnumStrategy: Map<string, Strategy> = new Map<string, Strategy>([
+    ["All Cheat", Strategy.ALL_CHEAT],
+    ["All Cooperate", Strategy.ALL_COOPERATE],
+    ["Grudger", Strategy.GRUDGER],
+    ["Detective", Strategy.DETECTIVE],
+    ["Simpleton", Strategy.SIMPLETON],
+    ["Random", Strategy.RANDOM],
+    ["Secrete", Strategy.SECRETE]
+])
+   
+
+
+export interface PlayerProps {
+    status: PlayerStatus,
+    name: string,
+    strategy: Strategy,
+    id: string,
+    color: string,
+    removePlayer: () => {},
+    updatePlayerProps: (newProps: PlayerProps) => {},
+}
+
+
+export default function Player(props: PlayerProps) {
+
+    const [status, updateStatus] = useState<PlayerStatus>(0);
+
+    const [content, updateContent] = useState<JSX.Element>(<div/>)
+
+
+    const [playerName, updatePlayerName] = useState<string>("")
+    const [playerStrategy, updateStrategy] = useState<string>(StrategyName[Strategy.RANDOM])
+
+    const savePlayer = () => {
+        let new_props = Object.assign({}, props);
+        new_props.status = PlayerStatus.SAVED;
+        new_props.name = playerName;
+        new_props.strategy = NameToEnumStrategy.get(playerStrategy) ?? Strategy.RANDOM
+        props.updatePlayerProps(new_props);
+        updateStatus(PlayerStatus.SAVED);
+    }
+
+    const handleChangeStrategy = (event: SelectChangeEvent) => {
+        updateStrategy(event.target.value);
+    };
+
+
+    useEffect(() => {
+        switch(status) {
+            case PlayerStatus.JUST_CREATED:
+                updateContent(<div style = {{display:"flex", flexDirection: "column", position:"relative"}}>
+                    <input placeholder={playerName} onChange={(v) => updatePlayerName(v.target.value)}></input>
+                    <div style = {{display: "flex", flexDirection:"row"}}>
+                    <FormControl fullWidth>
+                        <InputLabel id="demo-simple-select-label">Strategy</InputLabel>
+                        <Select
+                            labelId="demo-simple-select-label"
+                            id="demo-simple-select"
+                            value={playerStrategy}
+                            label="Strategy"
+                            onChange={handleChangeStrategy}
+                        >
+                            {StrategyName.map((name) => 
+                                <MenuItem key = {name} value = {name}>
+                                    {name}
+                                </MenuItem>)
+                            }
+                        </Select>
+                    </FormControl>
+                    <button onClick = {() => savePlayer()}>Save</button>
+                    </div>
+                </div>)
+                break;
+            case PlayerStatus.SAVED:
+                updateContent(<div style = {{display:"flex", flexDirection: "column"}}>
+                    <div>Team: {playerName}</div>
+                    <div>Strategy: {playerStrategy}</div>
+                </div>)
+                break;
+            case PlayerStatus.LOADING:
+            default:
+                updateContent(<FidgetSpinner
+                    visible={true}
+                    height="80"
+                    width="80"
+                    ariaLabel="fidget-spinner-loading"
+                    wrapperStyle={{}}
+                    wrapperClass="fidget-spinner-wrapper"
+                    />)
+                break;
+        }
+    }, [status, playerStrategy, playerName]);
+
+
+    useEffect(() => {
+        updateStatus(props.status)
+    }, [props.status])
+
+    return (
+        <div style = {{
+            position: "relative",
+            height: "80px", padding: "4px", display:"flex",
+             border: "solid", borderRadius:"16px", borderColor: "grey", borderWidth:"0.2px",
+             justifyContent: "center", alignItems: "center"}}>
+            <button style = {{
+                position: "absolute", top: "8px", right:"8px",
+                width: "16px", height:"16px", display:"flex",
+                justifyContent: "center", alignItems:"center"}}
+                onClick = {props.removePlayer}
+            >X</button>
+            {content}
+        </div>
+    )
+}
