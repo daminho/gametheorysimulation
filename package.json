@@ -1,6 +1,6 @@
 {
   "homepage": "https://daminho.github.io/gametheorysimulation",
-  "name": "my-app",
+  "name": "gametheorysimulation",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
