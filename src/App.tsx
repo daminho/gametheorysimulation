@@ -7,7 +7,7 @@ import PrisonerDilemma from './games/PrisonerDilemma/PrisonerDilemma';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="https://daminho.github.io/gametheorysimulation">
       <Routes>
         <Route path="/" element = {<MainPage/>}/>
         <Route path="/dovehawks" element = {<DoveHawk/>}/>
