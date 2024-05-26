@@ -8,18 +8,7 @@ const MainPage: FC = () => {
 
 
     return (
-        <ul>
-            <li> 
-                <Link to ="/dovehawks">
-                DoveHawk
-                </Link>
-            </li>
-            <li>
-                <Link to ="/prisonerdelimma">
-                    Prisoner's Delimma
-                </Link>
-            </li>
-        </ul>
+        <></>
     )
 
 }
