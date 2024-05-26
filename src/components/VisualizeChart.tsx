@@ -23,7 +23,7 @@ const VisualizeChart: FC<VisualizeChartProps> = ({ xlabels, datas }) => {
       justifyContent: "center",
       alignItems: "center",
       width: "100%",
-      height: "70%",
+      height: "100%",
     };
   
 
@@ -31,6 +31,7 @@ const VisualizeChart: FC<VisualizeChartProps> = ({ xlabels, datas }) => {
 
 
     const [maxValue, setMaxValue] = useState<number>(0)  
+    const [minValue, setMinValue] = useState<number>(0)  
     const [options, updateOptions] = useState<any>({
       maintainAspectRatio: false,
       scales: {
@@ -57,7 +58,7 @@ const VisualizeChart: FC<VisualizeChartProps> = ({ xlabels, datas }) => {
         maintainAspectRatio: false,
         scales: {
           y: {
-            min: 1,
+            min: Math.max(minValue * 2, minValue - 50),
             max: Math.min(maxValue * 2, maxValue + 50),
           },
         },
@@ -80,12 +81,15 @@ const VisualizeChart: FC<VisualizeChartProps> = ({ xlabels, datas }) => {
 
     useEffect(() => {
       let _max = 0
+      let _min = 1
       datas.forEach((info) => {
         for(let i = 0; i < info.values.length; i++) {
           _max = Math.max(_max, info.values[i])
+          _min = Math.min(_min, info.values[i])
         }
       })
       setMaxValue(_max)
+      setMinValue(_min)
       updateData({
         labels: xlabels.map((x) => x.toString()),
         datasets: datas.map((info, index) => {

@@ -21,6 +21,7 @@ export enum Strategy {
     SIMPLETON = 4,
     RANDOM = 5,
     SECRETE = 6,
+    TITANDTAT = 7,
 }
 
 const StrategyName = [
@@ -30,7 +31,8 @@ const StrategyName = [
     "Detective",
     "Simpleton",
     "Random",
-    "Secrete"
+    "Secrete",
+    "Tit and Tat"
 ]
 
 const NameToEnumStrategy: Map<string, Strategy> = new Map<string, Strategy>([
@@ -40,7 +42,8 @@ const NameToEnumStrategy: Map<string, Strategy> = new Map<string, Strategy>([
     ["Detective", Strategy.DETECTIVE],
     ["Simpleton", Strategy.SIMPLETON],
     ["Random", Strategy.RANDOM],
-    ["Secrete", Strategy.SECRETE]
+    ["Secrete", Strategy.SECRETE],
+    ["Tit and Tat", Strategy.TITANDTAT]
 ])
    
 
@@ -51,8 +54,8 @@ export interface PlayerProps {
     strategy: Strategy,
     id: string,
     color: string,
-    removePlayer: () => {},
-    updatePlayerProps: (newProps: PlayerProps) => {},
+    removePlayer: () => void,
+    updatePlayerProps: (newProps: PlayerProps) => void,
 }
 
 
@@ -83,20 +86,19 @@ export default function Player(props: PlayerProps) {
     useEffect(() => {
         switch(status) {
             case PlayerStatus.JUST_CREATED:
-                updateContent(<div style = {{display:"flex", flexDirection: "column", position:"relative"}}>
-                    <input placeholder={playerName} onChange={(v) => updatePlayerName(v.target.value)}></input>
-                    <div style = {{display: "flex", flexDirection:"row"}}>
+                updateContent(<div style = {{display:"flex", flexDirection: "column"}}>
+                    <input style={{height:"20px"}} placeholder={"Enter your name"} onChange={(v) => updatePlayerName(v.target.value)}></input>
+                    <div style = {{marginTop: "8px", display: "flex", flexDirection:"row"}}>
                     <FormControl fullWidth>
-                        <InputLabel id="demo-simple-select-label">Strategy</InputLabel>
                         <Select
                             labelId="demo-simple-select-label"
                             id="demo-simple-select"
                             value={playerStrategy}
-                            label="Strategy"
                             onChange={handleChangeStrategy}
+                            sx={{height:"30px", backgroundColor: "white"}}
                         >
                             {StrategyName.map((name) => 
-                                <MenuItem key = {name} value = {name}>
+                                <MenuItem key = {name} value = {name} sx = {{fontSize:"12px"}}>
                                     {name}
                                 </MenuItem>)
                             }
@@ -133,6 +135,7 @@ export default function Player(props: PlayerProps) {
 
     return (
         <div style = {{
+            backgroundColor: props.color ?? "transparent",
             position: "relative",
             height: "80px", padding: "4px", display:"flex",
              border: "solid", borderRadius:"16px", borderColor: "grey", borderWidth:"0.2px",
@@ -143,7 +146,7 @@ export default function Player(props: PlayerProps) {
                 justifyContent: "center", alignItems:"center"}}
                 onClick = {props.removePlayer}
             >X</button>
-            {content}
+            <div style = {{width: "60%"}}>{content}</div>
         </div>
     )
 }
