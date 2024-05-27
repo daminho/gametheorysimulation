@@ -26,7 +26,7 @@ export enum Strategy {
     
 }
 
-const StrategyName = [
+export const StrategyName = [
     "All Cheat",
     "All Cooperate",
     "Grudger",

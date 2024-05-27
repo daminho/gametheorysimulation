@@ -1,7 +1,8 @@
 import React, {FC, useEffect, useState} from "react";
 import VisualizeChart, { ChartDataInfoProps } from "../../components/VisualizeChart";
-import Player, { PlayerProps, PlayerStatus, Strategy } from "./Player";
-import { Grid } from "@mui/material";
+import Player, { PlayerProps, PlayerStatus, Strategy, StrategyName } from "./Player";
+import { Grid, styled } from "@mui/material";
+import { Modal } from "react-overlays";
 
 
 const payoff = [[[3, 3],[0, 5]],[[5, 0],[1, 1]]]
@@ -13,8 +14,31 @@ interface MatchProps {
     s2Cheated: boolean,
 }
 
+const RandomlyPositionedModal = styled(Modal)`
+  position: fixed;
+  width: 400px;
+  height: 300px;
+  z-index: 1040;
+  top: 50%;
+  left: 50%;
+  margin-top: -150px;
+  margin-left: -200px;
+  border: 1px solid #e5e5e5;
+  background-color: white;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+`;
 
-
+const Backdrop = styled("div")`
+  position: fixed;
+  z-index: 1040;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #000;
+  opacity: 0.5;
+`;
 
 const PrisonerDilemma: FC = () => {
 
@@ -34,7 +58,7 @@ const PrisonerDilemma: FC = () => {
 
     const [move, updateMove] = useState<Map<string, MatchProps>>(new Map<string, MatchProps>());
 
-    
+    const [showResult, setShowResult] = useState<boolean>(false)
 
 
     useEffect(() => {
@@ -252,9 +276,13 @@ const PrisonerDilemma: FC = () => {
     }
 
 
+
+
+
     const simulateDays = (day: number) => {
         if(day === -1 || !isSimulating) {
             setSimulating(false)
+            setShowResult(true)
             return
         }
         const _players = Array.from(players.values())
@@ -301,7 +329,6 @@ const PrisonerDilemma: FC = () => {
 
     const runSimulation = () => {
         const _players = Array.from(players.values())
-        console.log(_players)
         const _liveScore = new Map<string, number[]>()
         _players.forEach((player) => _liveScore.set(player.id, [0]))
         updateLiveScore(_liveScore)
@@ -315,18 +342,37 @@ const PrisonerDilemma: FC = () => {
         updateLiveScore(new Map<string, number[]>())
         updateMove(new Map<string, MatchProps>())
         setSimulating(false)
+        setShowResult(false)
     }
 
     const resetScore = () => {
         updateLiveScore(new Map<string, number[]>())
         updateMove(new Map<string, MatchProps>())
         setSimulating(false)
+        setShowResult(false)
     }
 
+    const renderBackdrop = (props: any) => <Backdrop {...props} />;
 
 
     return (
         <div style = {{"display": "flex", "flexDirection": "column"}}>
+            <RandomlyPositionedModal
+                show={showResult}
+                onHide={() => setShowResult(false)}
+                renderBackdrop={renderBackdrop}
+                aria-labelledby="modal-label"
+            >
+                <div style = {{display: "flex", flexDirection:"column", justifyContent:"center", alignItems:"center"}}>
+                    <h4 id="modal-label">Result</h4>
+                    <ul>
+                        {Array.from(liveScore.entries()).sort(([_a, a], [_b, b]) => {
+                            if(a.length === 0) return 1;
+                            return a[a.length - 1] < b[b.length - 1] ? 1 : -1;
+                        }).map(([k, v]) => <li>{players.get(k)!.name} - {StrategyName[players.get(k)!.strategy]}: {v.length > 0 ? v[v.length - 1] : 0}</li>)}
+                    </ul>
+                </div>
+            </RandomlyPositionedModal>
             <div style = {{display: "flex", height:"400px", marginBottom:"8px"}}>
                 <div style = {{width:"100pc",border:"solid", borderWidth:"0.2px", borderRadius:"8px", borderColor:"grey"}}>
                     <VisualizeChart  xlabels={Array.from({length: chartData[0]?.values.length ?? 0}, (_, i) => i + 1)} datas={chartData} />
