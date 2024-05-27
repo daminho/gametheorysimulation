@@ -32,6 +32,8 @@ const PrisonerDilemma: FC = () => {
 
     const [move, updateMove] = useState<Map<string, MatchProps>>(new Map<string, MatchProps>());
 
+    
+
 
     useEffect(() => {
         if(hasRandom) {
@@ -270,6 +272,11 @@ const PrisonerDilemma: FC = () => {
         updateMove(new Map<string, MatchProps>())
     }
 
+    const resetScore = () => {
+        updateLiveScore(new Map<string, number[]>())
+        updateMove(new Map<string, MatchProps>())
+    }
+
 
 
     return (
@@ -279,6 +286,7 @@ const PrisonerDilemma: FC = () => {
             <div style = {{"display": "flex", "flexDirection": "column"}}>
                 <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {runSimulation()}}>Run Simulation</button>
                 <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetSimulation()}}>Reset Simulation</button>
+                <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetScore()}}>Reset Score</button>
             </div>
             </div>
             <Grid container  spacing={2}>
