@@ -21,7 +21,9 @@ export enum Strategy {
     SIMPLETON = 4,
     RANDOM = 5,
     SECRETE = 6,
-    TITANDTAT = 7,
+    COPYCAT = 7,
+    COPYKITTEN = 8,
+    
 }
 
 const StrategyName = [
@@ -32,7 +34,8 @@ const StrategyName = [
     "Simpleton",
     "Random",
     "Secrete",
-    "Tit and Tat"
+    "Copy Cat",
+    "Copy Kitten",
 ]
 
 const NameToEnumStrategy: Map<string, Strategy> = new Map<string, Strategy>([
@@ -43,7 +46,8 @@ const NameToEnumStrategy: Map<string, Strategy> = new Map<string, Strategy>([
     ["Simpleton", Strategy.SIMPLETON],
     ["Random", Strategy.RANDOM],
     ["Secrete", Strategy.SECRETE],
-    ["Tit and Tat", Strategy.TITANDTAT]
+    ["Copy Cat", Strategy.COPYCAT],
+    ["Copy Kitten", Strategy.COPYKITTEN],
 ])
    
 
@@ -57,6 +61,18 @@ export interface PlayerProps {
     removePlayer: () => void,
     updatePlayerProps: (newProps: PlayerProps) => void,
 }
+
+
+function isBrightColor(hexCode:string) {
+    let _r: string = hexCode.slice(1, 3);
+    let _g: string = hexCode.slice(3, 5);
+    let _b: string = hexCode.slice(5, 7);
+    let r = parseInt(_r, 16);
+    let g = parseInt(_g, 16);
+    let b = parseInt(_b, 16);
+    return (((r * 299) + (g * 587) + (b * 114)) / 1000) > 155;
+}
+
 
 
 export default function Player(props: PlayerProps) {
@@ -109,9 +125,11 @@ export default function Player(props: PlayerProps) {
                 </div>)
                 break;
             case PlayerStatus.SAVED:
+                let isBright = isBrightColor(props.color.slice(1, props.color.length))
+                const textColor = isBright ? "#121212" : '#E5E5E5';
                 updateContent(<div style = {{display:"flex", flexDirection: "column"}}>
-                    <div>Team: {playerName}</div>
-                    <div>Strategy: {playerStrategy}</div>
+                    <div style={{color: textColor}}>Team: {playerName}</div>
+                    <div style={{color: textColor}}>Strategy: {playerStrategy}</div>
                 </div>)
                 break;
             case PlayerStatus.LOADING:

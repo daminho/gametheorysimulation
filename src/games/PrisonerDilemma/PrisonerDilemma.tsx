@@ -4,7 +4,7 @@ import Player, { PlayerProps, PlayerStatus, Strategy } from "./Player";
 import { Grid } from "@mui/material";
 
 
-const payoff = [[[2, 2],[-1, 3]],[[3, -1],[0, 0]]]
+const payoff = [[[3, 3],[0, 5]],[[5, 0],[1, 1]]]
 
 
 interface MatchProps {
@@ -12,6 +12,8 @@ interface MatchProps {
     s1Cheated: boolean,
     s2Cheated: boolean,
 }
+
+
 
 
 const PrisonerDilemma: FC = () => {
@@ -138,8 +140,10 @@ const PrisonerDilemma: FC = () => {
                     } else {
                         return selfLast;
                     } 
-                case Strategy.TITANDTAT:
+                case Strategy.COPYCAT:
                     return opLast;
+                case Strategy.COPYKITTEN:
+                    return opCheated ? 1 : 0;
                 case Strategy.SECRETE:
                 case Strategy.RANDOM:
                     return (Math.random() < 0.5 ? 0 : 1);
@@ -172,7 +176,13 @@ const PrisonerDilemma: FC = () => {
             case Strategy.DETECTIVE:
                 if(s2Moves.length < 4 && s2_curMove === 1)
                     s2Cheated = true;
-                    break;
+                break;
+            case Strategy.COPYKITTEN:
+                if(s2Moves.length > 1) {
+                    let n = s2Moves.length
+                    if(s2Moves[n - 1] == 1 && s2Moves[n - 2] == 1) s2Cheated = true;
+                }
+                break;
             default:
                 break;
         }
@@ -187,7 +197,13 @@ const PrisonerDilemma: FC = () => {
             case Strategy.DETECTIVE:
                 if(s2Moves.length < 4 && s1_curMove === 1)
                     s1Cheated = true;
-                    break;
+                break;
+            case Strategy.COPYKITTEN:
+                if(s1Moves.length > 1) {
+                    let n = s1Moves.length
+                    if(s1Moves[n - 1] == 1 && s1Moves[n - 2] == 1) s1Cheated = true;
+                }
+                break;
             default:
                 break;
         }
@@ -270,24 +286,28 @@ const PrisonerDilemma: FC = () => {
         setPlayers(new Map<string, PlayerProps> ())
         updateLiveScore(new Map<string, number[]>())
         updateMove(new Map<string, MatchProps>())
+        setSimulating(false)
     }
 
     const resetScore = () => {
         updateLiveScore(new Map<string, number[]>())
         updateMove(new Map<string, MatchProps>())
+        setSimulating(false)
     }
 
 
 
     return (
         <div style = {{"display": "flex", "flexDirection": "column"}}>
-            <div style = {{display: "flex", height:"500px"}}>
-            <VisualizeChart  xlabels={Array.from({length: chartData[0]?.values.length ?? 0}, (_, i) => i + 1)} datas={chartData} />
-            <div style = {{"display": "flex", "flexDirection": "column"}}>
-                <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {runSimulation()}}>Run Simulation</button>
-                <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetSimulation()}}>Reset Simulation</button>
-                <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetScore()}}>Reset Score</button>
-            </div>
+            <div style = {{display: "flex", height:"400px", marginBottom:"8px"}}>
+                <div style = {{width:"100pc",border:"solid", borderWidth:"0.2px", borderRadius:"8px", borderColor:"grey"}}>
+                    <VisualizeChart  xlabels={Array.from({length: chartData[0]?.values.length ?? 0}, (_, i) => i + 1)} datas={chartData} />
+                </div>
+                <div style = {{"display": "flex", "flexDirection": "column"}}>
+                    <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {runSimulation()}}>Run Simulation</button>
+                    <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetSimulation()}}>Reset Simulation</button>
+                    <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetScore()}}>Reset Score</button>
+                </div>
             </div>
             <Grid container  spacing={2}>
                 <Grid item md = {3}>
