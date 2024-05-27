@@ -46,7 +46,26 @@ const PrisonerDilemma: FC = () => {
     }, [hasRandom])
 
 
-
+    const randomColor = () => {
+        let _cac = [140, 140, 140]
+        let _x = Math.random()
+        if(_x * 99 < 33) {
+            _cac[0] += Math.random() * 50 + Math.random() * 50
+            _cac[Math.random() < 0.5 ? 1 : 2] += Math.random() * 30 + Math.random() * 30
+        } else if(_x * 99 < 66) {
+            _cac[1] += Math.random() * 50 + Math.random() * 50
+            _cac[Math.random() < 0.5 ? 2 : 0] += Math.random() * 30 + Math.random() * 30
+        } else {
+            _cac[2] += Math.random() * 50 + Math.random() * 50
+            _cac[Math.random() < 0.5 ? 0 : 1] += Math.random() * 30 + Math.random() * 30
+        }
+        let _tmp = "";
+        for(let i = 0; i < 3; i++) {
+            _tmp += Math.round(_cac[i]).toString(16)
+        }
+        console.log("#" + _tmp)
+        return ("#" + _tmp)
+    }
 
 
     const updatePlayers = () => {
@@ -58,7 +77,7 @@ const PrisonerDilemma: FC = () => {
                 name:"", strategy: Strategy.RANDOM,
                 status: PlayerStatus.JUST_CREATED,
                 id: id,
-                color: "#" +  Math.floor(Math.random()*16777215).toString(16),
+                color: randomColor(),
                 removePlayer: () => {
                     setPlayers((__players) => {
                         let __newPlayers = new Map<string, PlayerProps>(__players)
@@ -66,14 +85,25 @@ const PrisonerDilemma: FC = () => {
                         return __newPlayers
                     })
                 },
-                updatePlayerProps: (newProps: PlayerProps) => {
+                updatePlayerPropsName: (newName: string) => {
                     setPlayers((__players) => {
                         let __newPlayers = new Map<string, PlayerProps>(__players)
-                        __newPlayers.set(id, newProps)
+                        let _newProps = Object.assign({}, __newPlayers.get(id)!)
+                        _newProps.name = newName
+                        __newPlayers.set(id, _newProps)
+                        return __newPlayers
+                    })
+                },
+                updatePlayerPropsStrategy: (newStrategy: Strategy) => {
+                    setPlayers((__players) => {
+                        let __newPlayers = new Map<string, PlayerProps>(__players)
+                        let _newProps = Object.assign({}, __newPlayers.get(id)!)
+                        _newProps.strategy = newStrategy
+                        __newPlayers.set(id, _newProps)
                         return __newPlayers
                     })
                 }
-            })
+            } as PlayerProps)
             return _newPlayers
         })
     }
@@ -227,7 +257,7 @@ const PrisonerDilemma: FC = () => {
             setSimulating(false)
             return
         }
-        const _players = Array.from(players.values()).filter((item) => item.status === PlayerStatus.SAVED)
+        const _players = Array.from(players.values())
         _players.sort((a, b) => {
             return a.id < b.id ? -1 : 1;
         } )
@@ -240,7 +270,6 @@ const PrisonerDilemma: FC = () => {
                     let _move =  getMove(id1, id2)
                     let _score1 = _tmpScore.get(id1) ?? 0
                     let _score2 = _tmpScore.get(id2) ?? 0
-                    console.log(_players[i].strategy, _players[j].strategy, _move)
                     _score1 += payoff[_move[0]][_move[1]][0]
                     _score2 += payoff[_move[0]][_move[1]][1]
                     _tmpScore.set(id1, _score1)
@@ -250,8 +279,6 @@ const PrisonerDilemma: FC = () => {
             updateLiveScore((_liveScore) => {
                 let _newLiveScore = new Map<string, number[]>(_liveScore)
                 let _tmp = []
-                console.log(Array.from(_tmpScore.entries()))
-                console.log(Array.from(_newLiveScore.entries()))
                 Array.from(_tmpScore.entries()).forEach(([k, v]) => {
                     _tmp = _newLiveScore.get(k) ?? []
                     let _last = _tmp.length > 0 ? _tmp[_tmp.length - 1] : 0
@@ -273,7 +300,8 @@ const PrisonerDilemma: FC = () => {
 
 
     const runSimulation = () => {
-        const _players = Array.from(players.values()).filter((item) => item.status === PlayerStatus.SAVED)
+        const _players = Array.from(players.values())
+        console.log(_players)
         const _liveScore = new Map<string, number[]>()
         _players.forEach((player) => _liveScore.set(player.id, [0]))
         updateLiveScore(_liveScore)

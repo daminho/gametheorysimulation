@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { KeyboardEvent, useEffect, useState } from "react";
 import { FidgetSpinner } from "react-loader-spinner";
 import { JsxElement } from "typescript";
 import Menu from "@mui/material/Menu"
@@ -59,7 +59,8 @@ export interface PlayerProps {
     id: string,
     color: string,
     removePlayer: () => void,
-    updatePlayerProps: (newProps: PlayerProps) => void,
+    updatePlayerPropsName: (newName: string) => void,
+    updatePlayerPropsStrategy: (newStrategy: Strategy) => void
 }
 
 
@@ -70,7 +71,8 @@ function isBrightColor(hexCode:string) {
     let r = parseInt(_r, 16);
     let g = parseInt(_g, 16);
     let b = parseInt(_b, 16);
-    return (((r * 299) + (g * 587) + (b * 114)) / 1000) > 155;
+    console.log(hexCode, r, g, b, (((r * 299) + (g * 587) + (b * 114)) / 1000));
+    return (((r * 299) + (g * 587) + (b * 114)) / 1000) > 128;
 }
 
 
@@ -85,25 +87,24 @@ export default function Player(props: PlayerProps) {
     const [playerName, updatePlayerName] = useState<string>("")
     const [playerStrategy, updateStrategy] = useState<string>(StrategyName[Strategy.RANDOM])
 
-    const savePlayer = () => {
-        let new_props = Object.assign({}, props);
-        new_props.status = PlayerStatus.SAVED;
-        new_props.name = playerName;
-        new_props.strategy = NameToEnumStrategy.get(playerStrategy) ?? Strategy.RANDOM
-        props.updatePlayerProps(new_props);
-        updateStatus(PlayerStatus.SAVED);
+
+    const handleChangeName = (newName: string) => {
+        props.updatePlayerPropsName(newName);
+        updatePlayerName(newName)
     }
 
     const handleChangeStrategy = (event: SelectChangeEvent) => {
         updateStrategy(event.target.value);
+        props.updatePlayerPropsStrategy(NameToEnumStrategy.get(event.target.value as string) ?? Strategy.RANDOM)
     };
+    
 
 
     useEffect(() => {
         switch(status) {
             case PlayerStatus.JUST_CREATED:
                 updateContent(<div style = {{display:"flex", flexDirection: "column"}}>
-                    <input style={{height:"20px"}} placeholder={"Enter your name"} onChange={(v) => updatePlayerName(v.target.value)}></input>
+                    <input style={{height:"20px"}} placeholder={"Enter your name"} onChange={(v) => handleChangeName(v.target.value)}></input>
                     <div style = {{marginTop: "8px", display: "flex", flexDirection:"row"}}>
                     <FormControl fullWidth>
                         <Select
@@ -120,13 +121,12 @@ export default function Player(props: PlayerProps) {
                             }
                         </Select>
                     </FormControl>
-                    <button onClick = {() => savePlayer()}>Save</button>
+                    {/* <button onClick = {() => savePlayer()}>Save</button> */}
                     </div>
                 </div>)
                 break;
             case PlayerStatus.SAVED:
-                let isBright = isBrightColor(props.color.slice(1, props.color.length))
-                const textColor = isBright ? "#121212" : '#E5E5E5';
+                const textColor = "#121212"
                 updateContent(<div style = {{display:"flex", flexDirection: "column"}}>
                     <div style={{color: textColor}}>Team: {playerName}</div>
                     <div style={{color: textColor}}>Strategy: {playerStrategy}</div>
@@ -157,7 +157,8 @@ export default function Player(props: PlayerProps) {
             position: "relative",
             height: "80px", padding: "4px", display:"flex",
              border: "solid", borderRadius:"16px", borderColor: "grey", borderWidth:"0.2px",
-             justifyContent: "center", alignItems: "center"}}>
+             justifyContent: "center", alignItems: "center"}}
+        >
             <button style = {{
                 position: "absolute", top: "8px", right:"8px",
                 width: "16px", height:"16px", display:"flex",
