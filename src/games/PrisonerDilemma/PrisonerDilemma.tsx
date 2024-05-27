@@ -39,7 +39,7 @@ const PrisonerDilemma: FC = () => {
         if(hasRandom) {
             return;
         }
-        setNumRound(150 + Math.round(Math.random() * 50));
+        setNumRound(100 + Math.round(Math.random() * 20));
         setHasRandom(true);
     }, [hasRandom])
 
