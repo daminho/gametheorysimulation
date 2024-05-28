@@ -27,6 +27,7 @@ const RandomlyPositionedModal = styled(Modal)`
   background-color: white;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   padding: 20px;
+  overflow: scroll;
 `;
 
 const Backdrop = styled("div")`
@@ -65,7 +66,7 @@ const PrisonerDilemma: FC = () => {
         if(hasRandom) {
             return;
         }
-        setNumRound(100 + Math.round(Math.random() * 20));
+        setNumRound(80 + Math.round(Math.random() * 20));
         setHasRandom(true);
     }, [hasRandom])
 
