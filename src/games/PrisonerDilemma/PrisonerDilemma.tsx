@@ -93,7 +93,7 @@ const PrisonerDilemma: FC = () => {
 
 
     const updatePlayers = () => {
-        let id = (Math.random() + 1).toString(36).substring(7);
+        let id = (Math.random() + 1).toString(36).substring(0, 10);
 
         setPlayers((_players: Map<string, PlayerProps>) => {
             let _newPlayers = new Map<string, PlayerProps>(_players)
@@ -166,7 +166,7 @@ const PrisonerDilemma: FC = () => {
             return getMove(id2, id1)
         }
         const matchProps =  move.get(id1.concat(id2))
-        const oldMoves = matchProps?.moves ?? []
+        const oldMoves = matchProps?.moves
         const makeMove = (_s: Strategy, _selfOldMoves: number[], _opOldMoves: number[], opCheated: boolean) => {
             if(_selfOldMoves.length === 0) return init(_s) 
             let opLast = _opOldMoves[_opOldMoves.length - 1];
@@ -177,8 +177,8 @@ const PrisonerDilemma: FC = () => {
                 case Strategy.ALL_COOPERATE:
                     return 0;
                 case Strategy.DETECTIVE:
-                    if(oldMoves.length < 4) {
-                        return oldMoves.length === 1 ? 1 : 0;
+                    if(_selfOldMoves.length < 4) {
+                        return _selfOldMoves.length === 1 ? 1 : 0;
                     } else {
                         if(opCheated) {
                             return opLast;
@@ -194,7 +194,7 @@ const PrisonerDilemma: FC = () => {
                     } else {
                         return selfLast;
                     } 
-                case Strategy.COPYCAT:
+                case Strategy.TITFORTAT:
                     return opLast;
                 case Strategy.COPYKITTEN:
                     return opCheated ? 1 : 0;
@@ -207,8 +207,8 @@ const PrisonerDilemma: FC = () => {
         let s1 = players.get(id1)?.strategy ?? Strategy.RANDOM
         let s2 = players.get(id2)?.strategy ?? Strategy.RANDOM
 
-        let s1Moves = oldMoves.map(x => x[0]) ?? []
-        let s2Moves = oldMoves.map(x => x[1]) ?? []
+        let s1Moves = oldMoves?.map(x => x[0]) ?? []
+        let s2Moves = oldMoves?.map(x => x[1]) ?? []
 
         let s1Cheated = matchProps?.s1Cheated ?? false
         let s2Cheated = matchProps?.s2Cheated ?? false
@@ -234,7 +234,7 @@ const PrisonerDilemma: FC = () => {
             case Strategy.COPYKITTEN:
                 if(s2Moves.length > 1) {
                     let n = s2Moves.length
-                    if(s2Moves[n - 1] == 1 && s2Moves[n - 2] == 1) s2Cheated = true;
+                    if(s2Moves[n - 1] === 1 && s2Moves[n - 2] === 1) s2Cheated = true;
                 }
                 break;
             default:
@@ -255,7 +255,7 @@ const PrisonerDilemma: FC = () => {
             case Strategy.COPYKITTEN:
                 if(s1Moves.length > 1) {
                     let n = s1Moves.length
-                    if(s1Moves[n - 1] == 1 && s1Moves[n - 2] == 1) s1Cheated = true;
+                    if(s1Moves[n - 1] === 1 && s1Moves[n - 2] === 1) s1Cheated = true;
                 }
                 break;
             default:
@@ -265,7 +265,7 @@ const PrisonerDilemma: FC = () => {
         updateMove((_moves) => {
             let _newMoves = new Map<string, MatchProps>(_moves)
             _newMoves.set(id1.concat(id2), {
-                moves: oldMoves.concat([[s1_curMove, s2_curMove]]),
+                moves: (oldMoves ?? []).concat([[s1_curMove, s2_curMove]]),
                 s1Cheated: s1Cheated,
                 s2Cheated: s2Cheated,
             })
@@ -281,6 +281,7 @@ const PrisonerDilemma: FC = () => {
 
     const simulateDays = (day: number) => {
         if(day === -1 || !isSimulating) {
+            console.log("Simulation End, players list", players)
             setSimulating(false)
             setShowResult(true)
             return
