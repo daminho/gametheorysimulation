@@ -1,6 +1,7 @@
 import React, {FC, useEffect, useState} from "react";
 import VisualizeChart, { ChartDataInfoProps } from "../../components/VisualizeChart";
-import Player, { PlayerProps, PlayerStatus, Strategy, StrategyName } from "./Player";
+import Player, { PlayerProps, PlayerStatus} from "./Player";
+import {Strategy, StrategyName} from "./Strategy";
 import { Grid, styled } from "@mui/material";
 import { Modal } from "react-overlays";
 
@@ -41,7 +42,7 @@ const Backdrop = styled("div")`
   opacity: 0.5;
 `;
 
-const PrisonerDilemma: FC = () => {
+const SimulationTab: FC = () => {
 
     
     const [numRound, setNumRound] = useState<number>(0);
@@ -49,7 +50,6 @@ const PrisonerDilemma: FC = () => {
 
 
     const [chartData, setChartData] = useState<ChartDataInfoProps[]>([]);
-    const [xlabels, setXLabels] = useState<number[]>([]);
 
 
     const [players, setPlayers] = useState<Map<string, PlayerProps>>(new Map<string, PlayerProps>());
@@ -358,7 +358,7 @@ const PrisonerDilemma: FC = () => {
 
 
     return (
-        <div style = {{"display": "flex", "flexDirection": "column"}}>
+        <div style = {{display: "flex", flexDirection: "column"}}>
             <RandomlyPositionedModal
                 show={showResult}
                 onHide={() => setShowResult(false)}
@@ -375,8 +375,10 @@ const PrisonerDilemma: FC = () => {
                     </ul>
                 </div>
             </RandomlyPositionedModal>
-            <div style = {{display: "flex", height:"400px", marginBottom:"8px"}}>
-                <div style = {{width:"100pc",border:"solid", borderWidth:"0.2px", borderRadius:"8px", borderColor:"grey"}}>
+
+            {/*The Chart & buttons*/}
+            <div style = {{display: "flex", height:"400px", marginBottom:"8px", maxWidth: "100vw"}}>
+                <div style = {{width:"100vw",border:"solid", borderWidth:"0.2px", borderRadius:"8px", borderColor:"grey"}}>
                     <VisualizeChart  xlabels={Array.from({length: chartData[0]?.values.length ?? 0}, (_, i) => i + 1)} datas={chartData} />
                 </div>
                 <div style = {{"display": "flex", "flexDirection": "column"}}>
@@ -385,6 +387,8 @@ const PrisonerDilemma: FC = () => {
                     <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetScore()}}>Reset Score</button>
                 </div>
             </div>
+
+            {/*The grid to display information of players/strategies */}
             <Grid container  spacing={2}>
                 <Grid item md = {3}>
                 <div style = {{
@@ -408,4 +412,4 @@ const PrisonerDilemma: FC = () => {
 }
 
 
-export default PrisonerDilemma
+export default SimulationTab

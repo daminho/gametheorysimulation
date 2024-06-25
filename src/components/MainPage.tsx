@@ -1,6 +1,6 @@
 import React, {FC} from "react";
 import { Link } from "react-router-dom";
-import DoveHawk from "../games/DoveHawk";
+import DoveHawk from "../games/DoveHawks-Deprecated/DoveHawk";
 
 
 

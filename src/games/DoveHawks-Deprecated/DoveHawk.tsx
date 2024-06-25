@@ -1,5 +1,5 @@
 import React, {EventHandler, FC, FormEvent, useEffect, useState} from "react"
-import VisualizeChart, { ChartDataInfoProps, VisualizeChartProps } from "../components/VisualizeChart"
+import VisualizeChart, { ChartDataInfoProps, VisualizeChartProps } from "../../components/VisualizeChart"
 
 interface Dove {
     probToHawk: number

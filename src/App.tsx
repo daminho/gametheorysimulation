@@ -1,10 +1,10 @@
 import React from 'react';
 import './App.css';
-import PrisonerDilemma from './games/PrisonerDilemma/PrisonerDilemma';
+import PrisonerDilemmaEntry from './games/PrisonerDilemma/PrisonerDilemmaEntry';
 
 function App() {
   return (
-    <PrisonerDilemma/>
+    <PrisonerDilemmaEntry/>
   );
 }
 

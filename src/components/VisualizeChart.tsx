@@ -47,11 +47,6 @@ const VisualizeChart: FC<VisualizeChartProps> = ({ xlabels, datas }) => {
       },
     })    
 
-    const [_data, updateData] = useState<any>({
-      labels: xlabels.map((x) => x.toString()),
-      datasets: []
-    })
-
 
     useEffect(() => {
       updateOptions({
@@ -66,18 +61,24 @@ const VisualizeChart: FC<VisualizeChartProps> = ({ xlabels, datas }) => {
           legend: {
             display: false,
           },
-        },
-        transitions: {
-          active: {
-            animation: {
-              duration: 0.1
-            }
-          }
         }
       })
     }, [maxValue])
 
     
+    const _data = {
+      labels: xlabels.map((x) => x.toString()),
+      datasets: datas.map((info, index) => {
+        const randomColor = "#" +  Math.floor(Math.random()*16777215).toString(16);
+        return {
+          label: info.label,
+          data: info.values,
+          fill: false,
+          borderColor: info.lineColor ?? randomColor,
+          tension: 0.0,
+        }
+      })
+    }
 
     useEffect(() => {
       let _max = 0
@@ -90,20 +91,7 @@ const VisualizeChart: FC<VisualizeChartProps> = ({ xlabels, datas }) => {
       })
       setMaxValue(_max)
       setMinValue(_min)
-      updateData({
-        labels: xlabels.map((x) => x.toString()),
-        datasets: datas.map((info, index) => {
-          const randomColor = "#" +  Math.floor(Math.random()*16777215).toString(16);
-  
-          return {
-            label: info.label,
-            data: info.values,
-            fill: false,
-            borderColor: info.lineColor ?? randomColor,
-            tension: 0.0,
-          }
-        })
-      })
+      
     }, [xlabels, datas])
   
     return (
