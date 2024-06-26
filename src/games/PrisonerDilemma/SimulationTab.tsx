@@ -1,13 +1,18 @@
-import React, {FC, useEffect, useState} from "react";
+import React, {FC, useContext, useEffect, useState} from "react";
 import VisualizeChart, { ChartDataInfoProps } from "../../components/VisualizeChart";
-import Player, { PlayerProps, PlayerStatus} from "./Player";
 import {Strategy, StrategyName} from "./Strategy";
 import { Grid, styled } from "@mui/material";
 import { Modal } from "react-overlays";
+import { StrategiesContext } from "./PrisonerDilemmaEntry";
 
 
 const payoff = [[[3, 3],[0, 5]],[[5, 0],[1, 1]]]
 
+export interface PlayerProps {
+    strategy: Strategy,
+    id: number,
+    score: number,
+}
 
 interface MatchProps {
     moves: [number, number][],
@@ -44,31 +49,93 @@ const Backdrop = styled("div")`
 
 const SimulationTab: FC = () => {
 
-    
-    const [numRound, setNumRound] = useState<number>(0);
-    const [hasRandom, setHasRandom] = useState<boolean>(false);
+    const strategiesContext = useContext(StrategiesContext)
 
+    
 
     const [chartData, setChartData] = useState<ChartDataInfoProps[]>([]);
-
-
-    const [players, setPlayers] = useState<Map<string, PlayerProps>>(new Map<string, PlayerProps>());
-
-    const [liveScore, updateLiveScore] = useState<Map<string, number[]>>(new Map<string, number[]>());
-
-
-    const [move, updateMove] = useState<Map<string, MatchProps>>(new Map<string, MatchProps>());
-
+    const [liveScore, updateLiveScore] = useState<Map<Strategy, number[]>>(new Map<Strategy, number[]>());
     const [showResult, setShowResult] = useState<boolean>(false)
 
+    const [isSimulating, setSimulating] = useState<boolean>(false)
+    const [curGameDay, setCurGameDay] = useState<number>(1000)
+    const [strategiesColor, updateStrategiesColor] = useState<Map<Strategy, string>>(new Map<Strategy, string>())
 
     useEffect(() => {
-        if(hasRandom) {
-            return;
-        }
-        setNumRound(80 + Math.round(Math.random() * 20));
-        setHasRandom(true);
-    }, [hasRandom])
+        let entries = Array.from(liveScore.entries())
+        setChartData(entries.map(([k, v]) => {
+            let _name = StrategyName[k.valueOf()]
+            return {
+                label: _name,
+                values: v,
+                lineColor: strategiesColor.get(k) ?? "black"
+            }
+        }))
+    }, [liveScore])
+
+
+
+
+    const [players, updatePlayers] = useState<PlayerProps[]>([])
+
+
+    const getPercentage = (_strategiesCount: Map<Strategy, number>) => {
+        let _percentage = new Map<Strategy, number>()
+        let _sum = 0
+
+        Array.from(_strategiesCount.entries()).forEach(([_key, _val]) => {
+            _sum += _val;
+        })
+
+        
+
+        Array.from(_strategiesCount.entries()).forEach(([_key, _val]) => {
+            _percentage.set(_key, _sum != 0 ? (Math.round(((_val /_sum )* 10000)) / 100): 0)
+        })
+
+        return _percentage
+
+    }
+
+    const _handleNewPercentage = (_percentage: Map<Strategy, number>) => {
+        updateLiveScore((_liveScore) => {
+            let _newLiveScore = new Map<Strategy, number[]>(_liveScore)
+            let _tmp = []
+            Array.from(_percentage.entries()).forEach(([k, v]) => {
+                _tmp = _newLiveScore.get(k) ?? []
+                let _last = _tmp.length > 0 ? _tmp[_tmp.length - 1] : 0
+                _newLiveScore.set(k, _tmp.concat(v))
+            })
+            return _newLiveScore
+        })
+    }
+
+    useEffect(() => {
+        resetSimulation()
+        updatePlayers((_players) => {
+            let _newPlayers: PlayerProps[] = []
+            Array.from(strategiesContext.strategiesCount.entries()).forEach(([_strategy, _cnt]) => {
+                for(let i = 0; i < _cnt; i++) {
+                    const _id = _newPlayers.length
+                    _newPlayers.push({
+                        strategy: _strategy,
+                        id: _id,
+                        score: 0
+                    })
+                }
+            })
+            return _newPlayers
+        })
+        let _strategiesColor = new Map<Strategy, string>()
+        Array.from(strategiesContext.strategiesCount.keys()).forEach((_key) => {
+            _strategiesColor.set(_key, randomColor())
+        })
+
+        let _percentage = getPercentage(strategiesContext.strategiesCount)
+        _handleNewPercentage(_percentage)
+
+    }, [strategiesContext.strategiesCount])
+
 
 
     const randomColor = () => {
@@ -88,66 +155,10 @@ const SimulationTab: FC = () => {
         for(let i = 0; i < 3; i++) {
             _tmp += Math.round(_cac[i]).toString(16)
         }
-        console.log("#" + _tmp)
         return ("#" + _tmp)
     }
 
 
-    const updatePlayers = () => {
-        let id = (Math.random() + 1).toString(36).substring(0, 10);
-
-        setPlayers((_players: Map<string, PlayerProps>) => {
-            let _newPlayers = new Map<string, PlayerProps>(_players)
-            _newPlayers.set(id, {
-                name:"", strategy: Strategy.RANDOM,
-                status: PlayerStatus.JUST_CREATED,
-                id: id,
-                color: randomColor(),
-                removePlayer: () => {
-                    setPlayers((__players) => {
-                        let __newPlayers = new Map<string, PlayerProps>(__players)
-                        __newPlayers.delete(id)
-                        return __newPlayers
-                    })
-                },
-                updatePlayerPropsName: (newName: string) => {
-                    setPlayers((__players) => {
-                        let __newPlayers = new Map<string, PlayerProps>(__players)
-                        let _newProps = Object.assign({}, __newPlayers.get(id)!)
-                        _newProps.name = newName
-                        __newPlayers.set(id, _newProps)
-                        return __newPlayers
-                    })
-                },
-                updatePlayerPropsStrategy: (newStrategy: Strategy) => {
-                    setPlayers((__players) => {
-                        let __newPlayers = new Map<string, PlayerProps>(__players)
-                        let _newProps = Object.assign({}, __newPlayers.get(id)!)
-                        _newProps.strategy = newStrategy
-                        __newPlayers.set(id, _newProps)
-                        return __newPlayers
-                    })
-                }
-            } as PlayerProps)
-            return _newPlayers
-        })
-    }
-
-    const [isSimulating, setSimulating] = useState<boolean>(false)
-    const [curGameDay, setCurGameDay] = useState<number>(0)
-
-
-    useEffect(() => {
-        let entries = Array.from(liveScore.entries())
-        setChartData(entries.map(([k, v]) => {
-            let prop = players.get(k)
-            return {
-                label: prop?.name ?? "No Name",
-                values: v,
-                lineColor: prop?.color ?? "black"
-            }
-        }))
-    }, [liveScore])
 
 
     const init = (_s: Strategy) => {
@@ -162,24 +173,17 @@ const SimulationTab: FC = () => {
     }
 
 
-    const getMove = (id1:string, id2:string): [number, number] => {
-        if(id1 > id2) {
-            return getMove(id2, id1)
-        }
-        const matchProps =  move.get(id1.concat(id2))
-        const oldMoves = matchProps?.moves
-        const makeMove = (_s: Strategy, _selfOldMoves: number[], _opOldMoves: number[], opCheated: boolean) => {
-            if(_selfOldMoves.length === 0) return init(_s) 
-            let opLast = _opOldMoves[_opOldMoves.length - 1];
-            let selfLast = _selfOldMoves[_selfOldMoves.length - 1]
+    const getScore = (s1: Strategy, s2: Strategy): [number, number] => {
+        const makeMove = (_s: Strategy, turn: number, selfLast: number, opLast: number, opCheated: boolean) => {
+            if(turn === 0) return init(_s) 
             switch(_s) {
                 case Strategy.ALL_CHEAT:
                     return 1;
                 case Strategy.ALL_COOPERATE:
                     return 0;
                 case Strategy.DETECTIVE:
-                    if(_selfOldMoves.length < 4) {
-                        return _selfOldMoves.length === 1 ? 1 : 0;
+                    if(turn < 4) {
+                        return turn === 1 ? 1 : 0;
                     } else {
                         if(opCheated) {
                             return opLast;
@@ -205,119 +209,125 @@ const SimulationTab: FC = () => {
             }
         }
 
-        let s1 = players.get(id1)?.strategy ?? Strategy.RANDOM
-        let s2 = players.get(id2)?.strategy ?? Strategy.RANDOM
+        let s1Last = 0, s2Last = 0;
+        let s1Cheated = false, s2Cheated = false;
+        let s1Score = 0, s2Score = 0;
+        let s1Moves: number[] = [], s2Moves: number[] = []
 
-        let s1Moves = oldMoves?.map(x => x[0]) ?? []
-        let s2Moves = oldMoves?.map(x => x[1]) ?? []
-
-        let s1Cheated = matchProps?.s1Cheated ?? false
-        let s2Cheated = matchProps?.s2Cheated ?? false
-
-        let s1_curMove = makeMove(s1, s1Moves, s2Moves, s2Cheated)
-        let s2_curMove = makeMove(s2, s2Moves, s1Moves, s1Cheated)
-        console.log(
-            id1.concat(id2), move.get(id1.concat(id2)),
-            s1Moves, s2Moves, s1_curMove, s2_curMove
-        )
-
-        switch(s1) {
-            case Strategy.GRUDGER:
-                if(s2_curMove === 1) s2Cheated = true
-                break;
-            case Strategy.SIMPLETON:
-                s2Cheated = s2_curMove === 1
-                break;
-            case Strategy.DETECTIVE:
-                if(s2Moves.length < 4 && s2_curMove === 1)
-                    s2Cheated = true;
-                break;
-            case Strategy.COPYKITTEN:
-                if(s2Moves.length > 1) {
-                    let n = s2Moves.length
-                    if(s2Moves[n - 1] === 1 && s2Moves[n - 2] === 1) s2Cheated = true;
-                }
-                break;
-            default:
-                break;
+        for(let i = 0; i < strategiesContext.numRoundPerMatch; i++) {
+            let s1Move = makeMove(s1, i, s1Last, s2Last, s2Cheated)
+            let s2Move = makeMove(s2, i, s2Last, s1Last, s1Cheated)
+            s1Score += payoff[s1Move][s2Move][0]
+            s2Score += payoff[s1Move][s2Move][1]
+            s1Moves.push(s1Move)
+            s2Moves.push(s2Move)
+            switch(s1) {
+                case Strategy.GRUDGER:
+                    if(s2Move === 1) s2Cheated = true
+                    break;
+                case Strategy.SIMPLETON:
+                    s2Cheated = s2Move === 1
+                    break;
+                case Strategy.DETECTIVE:
+                    if(i < 4 && s2Move === 1)
+                        s2Cheated = true;
+                    break;
+                case Strategy.COPYKITTEN:
+                    if(i > 1) {
+                        let n = s2Moves.length
+                        if(s2Moves[n - 1] === 1 && s2Moves[n - 2] === 1) s2Cheated = true;
+                    }
+                    break;
+                default:
+                    break;
+            }
+    
+            switch(s2) {
+                case Strategy.GRUDGER:
+                    if(s1Move === 1) s1Cheated = true
+                    break;
+                case Strategy.SIMPLETON:
+                    s1Cheated = s1Move === 1
+                    break;
+                case Strategy.DETECTIVE:
+                    if(i < 4 && s1Move === 1)
+                        s1Cheated = true;
+                    break;
+                case Strategy.COPYKITTEN:
+                    if(s1Moves.length > 1) {
+                        let n = s1Moves.length
+                        if(s1Moves[n - 1] === 1 && s1Moves[n - 2] === 1) s1Cheated = true;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            s1Last = s1Move
+            s2Last = s2Move 
         }
 
-        switch(s2) {
-            case Strategy.GRUDGER:
-                if(s1_curMove === 1) s1Cheated = true
-                break;
-            case Strategy.SIMPLETON:
-                s1Cheated = s1_curMove === 1
-                break;
-            case Strategy.DETECTIVE:
-                if(s2Moves.length < 4 && s1_curMove === 1)
-                    s1Cheated = true;
-                break;
-            case Strategy.COPYKITTEN:
-                if(s1Moves.length > 1) {
-                    let n = s1Moves.length
-                    if(s1Moves[n - 1] === 1 && s1Moves[n - 2] === 1) s1Cheated = true;
-                }
-                break;
-            default:
-                break;
-        }
-
-        updateMove((_moves) => {
-            let _newMoves = new Map<string, MatchProps>(_moves)
-            _newMoves.set(id1.concat(id2), {
-                moves: (oldMoves ?? []).concat([[s1_curMove, s2_curMove]]),
-                s1Cheated: s1Cheated,
-                s2Cheated: s2Cheated,
-            })
-            return _newMoves
-        })
-
-        return [s1_curMove, s2_curMove]
+        
+        return [s1Score, s2Score];
     }
-
-
-
 
 
     const simulateDays = (day: number) => {
         if(day === -1 || !isSimulating) {
-            console.log("Simulation End, players list", players)
             setSimulating(false)
             setShowResult(true)
             return
         }
-        const _players = Array.from(players.values())
-        _players.sort((a, b) => {
-            return a.id < b.id ? -1 : 1;
-        } )
         setTimeout(() => {
-            let _tmpScore: Map<string, number> = new Map<string, number>()
+            let _players = Array.from(players)
             for(let i = 0; i < _players.length; i++) {
-                let id1 = _players[i].id
                 for(let j = i + 1; j < _players.length; j++) {
-                    let id2 = _players[j].id
-                    let _move =  getMove(id1, id2)
-                    let _score1 = _tmpScore.get(id1) ?? 0
-                    let _score2 = _tmpScore.get(id2) ?? 0
-                    _score1 += payoff[_move[0]][_move[1]][0]
-                    _score2 += payoff[_move[0]][_move[1]][1]
-                    _tmpScore.set(id1, _score1)
-                    _tmpScore.set(id2, _score2)
+                    let [iScore, jScore] = getScore(_players[i].strategy, _players[j].strategy)
+                    _players[i].score += iScore
+                    _players[j].score += jScore
                 }
             }
-            updateLiveScore((_liveScore) => {
-                let _newLiveScore = new Map<string, number[]>(_liveScore)
-                let _tmp = []
-                Array.from(_tmpScore.entries()).forEach(([k, v]) => {
-                    _tmp = _newLiveScore.get(k) ?? []
-                    let _last = _tmp.length > 0 ? _tmp[_tmp.length - 1] : 0
-                    _newLiveScore.set(k, _tmp.concat(_last + v))
-                })
-                return _newLiveScore
+
+            _players.sort((a : PlayerProps, b: PlayerProps) => {
+                if(a.score == b.score) {
+                    return Math.random() < 0.5 ? 1 : -1; // avoid being sorted by other metrics
+                } else {
+                    return a.score < b.score ? 1 : -1;
+                }
+                
             })
+
+            let _listBestStrategy: Strategy[] = [];
+            let _n = Math.min(_players.length, strategiesContext.replaceAmount)
+            for(let i = 0; i < _n; i++) {
+                _listBestStrategy.push(_players[i].strategy)
+            }
+            for(let i = 0; i < _n; i++) {
+                _players[_players.length - 1 - i].strategy = _listBestStrategy[i]
+            }
+            for(let i = 0; i < _players.length; i++) {
+                _players[i].score = 0
+            }
+
+            let _newLocalStrategiesCount = new Map<Strategy, number>()
+
+            for(let i = 0; i < _players.length; i++) {
+                let _tmp = _newLocalStrategiesCount.get(_players[i].strategy) ?? 0
+                _newLocalStrategiesCount.set(_players[i].strategy, _tmp + 1)
+            }
+            Array.from(strategiesContext.strategiesCount.keys()).forEach((_key) => {
+                if(!_newLocalStrategiesCount.has(_key)) {
+                    _newLocalStrategiesCount.set(_key, 0)
+                }
+            });
+
+            updatePlayers(_players);
+
+            let _percentage = getPercentage(_newLocalStrategiesCount)
+            _handleNewPercentage(_percentage)
+
+         
             setCurGameDay(day - 1)
-        },200)
+        },300)
 
         
     }
@@ -331,35 +341,25 @@ const SimulationTab: FC = () => {
 
     const runSimulation = () => {
         const _players = Array.from(players.values())
-        const _liveScore = new Map<string, number[]>()
-        _players.forEach((player) => _liveScore.set(player.id, [0]))
+        const _liveScore = new Map<Strategy, number[]>()
         updateLiveScore(_liveScore)
-        setCurGameDay(numRound)
         setSimulating(true)
 
     }
 
     const resetSimulation = () => {
-        setPlayers(new Map<string, PlayerProps> ())
-        updateLiveScore(new Map<string, number[]>())
-        updateMove(new Map<string, MatchProps>())
+        updateLiveScore(new Map<Strategy, number[]>())
         setSimulating(false)
         setShowResult(false)
     }
 
-    const resetScore = () => {
-        updateLiveScore(new Map<string, number[]>())
-        updateMove(new Map<string, MatchProps>())
-        setSimulating(false)
-        setShowResult(false)
-    }
 
     const renderBackdrop = (props: any) => <Backdrop {...props} />;
 
 
     return (
         <div style = {{display: "flex", flexDirection: "column"}}>
-            <RandomlyPositionedModal
+            {/* <RandomlyPositionedModal
                 show={showResult}
                 onHide={() => setShowResult(false)}
                 renderBackdrop={renderBackdrop}
@@ -374,7 +374,7 @@ const SimulationTab: FC = () => {
                         }).map(([k, v]) => <li>{players.get(k)!.name} - {StrategyName[players.get(k)!.strategy]}: {v.length > 0 ? v[v.length - 1] : 0}</li>)}
                     </ul>
                 </div>
-            </RandomlyPositionedModal>
+            </RandomlyPositionedModal> */}
 
             {/*The Chart & buttons*/}
             <div style = {{display: "flex", height:"400px", marginBottom:"8px", maxWidth: "100vw"}}>
@@ -383,12 +383,13 @@ const SimulationTab: FC = () => {
                 </div>
                 <div style = {{"display": "flex", "flexDirection": "column"}}>
                     <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {runSimulation()}}>Run Simulation</button>
+                    <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {setSimulating(false)}}>Stop Simulation</button>
+
                     <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetSimulation()}}>Reset Simulation</button>
-                    <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetScore()}}>Reset Score</button>
                 </div>
             </div>
 
-            {/*The grid to display information of players/strategies */}
+            {/* The grid to display information of players/strategies
             <Grid container  spacing={2}>
                 <Grid item md = {3}>
                 <div style = {{
@@ -406,7 +407,7 @@ const SimulationTab: FC = () => {
                 {Array.from(players.values()).map(props => <Grid item key = {props.id} md = {3}>
                     <Player {...props}/>
                 </Grid>)}
-            </Grid>
+            </Grid> */}
         </div>
     )
 }

@@ -1,63 +1,75 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useContext, useEffect, useState } from "react";
 import { Strategy, StrategyName, NameToEnumStrategy} from "./Strategy";
 import { Slider, Stack } from "@mui/material";
+import { StrategiesContext } from "./PrisonerDilemmaEntry";
 
 
-export interface SettingTabProps {
-    strategiesCount: Map<string, number>,
-    updateStrategies: (name: string, count: number) => void
+export interface GameSettings {
+    strategiesCount: Map<Strategy, number>,
+    updateStrategiesCount: (name: Strategy, count: number) => void
+    errorProbability: number,
+    updateErrorProb: (newProb: number) => void,
+    replaceAmount: number,
+    updateReplaceAmount: (newVal: number) => void,
+    numRoundPerMatch: number,
+    updateNumRoundPerMatch: (newRound: number) => void,
 }
 
 
-const SettingTab: FC<SettingTabProps> = ({strategiesCount, updateStrategies}) => {
+const SettingTab: FC = () => {
+
+    const strategiesContext = useContext(StrategiesContext);
 
 
-    const updateStrategyCount = (name: string, newValue: number) => {
-        console.log("ALO")
-        updateStrategies(name, newValue)
-    }
-
-    const [percentage, updatePercentage] = useState<Map<string, number>>(new Map<string, number>());
-
-    useEffect(() => {
-        console.log("getValue updated")
+    const getPercentage = (strategiesCount: Map<Strategy, number>) => {
         let sum = 0;
-        let _percentage = new Map<string, number>();
+        let _percentage = new Map<Strategy, number>();
         Array.from(strategiesCount.entries()).forEach(([name, cnt]) => {
             sum += cnt;
         });
         Array.from(strategiesCount.entries()).forEach(([name, cnt]) => {
             _percentage.set(name, Math.round((cnt / sum) * 10000) / 100);
         });
-        updatePercentage(_percentage)
-    }, [])
+        return _percentage
+    }
+
+    const [percentage, updatePercentage] = useState<Map<Strategy, number>>(new Map<Strategy, number>())
+
+    useEffect(() => {
+        updatePercentage(getPercentage(strategiesContext.strategiesCount))
+    }, [strategiesContext.strategiesCount])
+
 
     return (
-    <div>
-        {StrategyName.map((name) => 
-            <Stack direction="row">
-                <a style = {{width: "100px", marginRight: "4px"}}>{name}</a>
-                <a>{}</a>
-                <a>0</a>
-                <Slider
-                    sx = {{
-                        marginLeft: "8px",
-                        marginRight: "8px"
-                    }}
-                    onChange={(e: Event, newValue: number | number[]) => updateStrategyCount(name, newValue as number)}
-                    aria-label="Temperature"
-                    defaultValue={strategiesCount.get(name) ?? 0}
-                    valueLabelDisplay="auto"
-                    step={10}
-                    marks
-                    min={0}
-                    max={500}
-                />
-                <a>500</a>
-                <div style = {{width: "200px", marginLeft: "4px"}}>% of population: {percentage.get(name) ?? 0}%</div>
-            </Stack>
-        )}
-    </div>
+        <div>
+            {StrategyName.map((name) => {
+                let _strategy: Strategy = NameToEnumStrategy.get(name) ?? Strategy.RANDOM
+                return (
+                    <Stack key = {name} direction="row">
+                        <a style = {{width: "100px", marginRight: "4px"}}>{name}</a>
+                        <a>{}</a>
+                        <a>0</a>
+                        <Slider
+                            sx = {{
+                                marginLeft: "8px",
+                                marginRight: "8px",
+                                maxWidth: "600px"
+                            }}
+                            onChange={(e: Event, newValue: number | number[]) => strategiesContext.updateStrategiesCount(_strategy, newValue as number)}
+                            aria-label="Strategy Count"
+                            value={strategiesContext.strategiesCount.get(_strategy) ?? 0}
+                            valueLabelDisplay="auto"
+                            step={5}
+                            marks
+                            min={0}
+                            max={200}
+                        />
+                        <a>200</a>
+                        <div style = {{width: "200px", marginLeft: "4px"}}>% of population: {percentage.get(_strategy) ?? 0}%</div>
+                    </Stack>
+                )}
+            )}
+        </div>
     )
 }
 
