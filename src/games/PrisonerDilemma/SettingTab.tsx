@@ -7,7 +7,7 @@ import { StrategiesContext } from "./PrisonerDilemmaEntry";
 export interface GameSettings {
     strategiesCount: Map<Strategy, number>,
     updateStrategiesCount: (name: Strategy, count: number) => void
-    errorProbability: number,
+    errorPercentage: number,
     updateErrorProb: (newProb: number) => void,
     replaceAmount: number,
     updateReplaceAmount: (newVal: number) => void,

@@ -1,6 +1,6 @@
 import React, {FC, useContext, useEffect, useState} from "react";
 import VisualizeChart, { ChartDataInfoProps } from "../../components/VisualizeChart";
-import {Strategy, StrategyName} from "./Strategy";
+import {NameToEnumStrategy, Strategy, StrategyName} from "./Strategy";
 import { Grid, styled } from "@mui/material";
 import { Modal } from "react-overlays";
 import { StrategiesContext } from "./PrisonerDilemmaEntry";
@@ -132,6 +132,7 @@ const SimulationTab: FC = () => {
         })
 
         let _percentage = getPercentage(strategiesContext.strategiesCount)
+
         _handleNewPercentage(_percentage)
 
     }, [strategiesContext.strategiesCount])
@@ -214,9 +215,17 @@ const SimulationTab: FC = () => {
         let s1Score = 0, s2Score = 0;
         let s1Moves: number[] = [], s2Moves: number[] = []
 
+        let errorPercentage = strategiesContext.errorPercentage
+
         for(let i = 0; i < strategiesContext.numRoundPerMatch; i++) {
             let s1Move = makeMove(s1, i, s1Last, s2Last, s2Cheated)
             let s2Move = makeMove(s2, i, s2Last, s1Last, s1Cheated)
+
+            let s1Error = Math.random() * 100 <= errorPercentage
+            let s2Error = Math.random() * 100 <= errorPercentage
+            s1Move = s1Error ? 1 - s1Move : s1Move
+            s2Move = s2Error ? 1 - s2Move : s2Move
+
             s1Score += payoff[s1Move][s2Move][0]
             s2Score += payoff[s1Move][s2Move][1]
             s1Moves.push(s1Move)
@@ -321,7 +330,6 @@ const SimulationTab: FC = () => {
             });
 
             updatePlayers(_players);
-
             let _percentage = getPercentage(_newLocalStrategiesCount)
             _handleNewPercentage(_percentage)
 
@@ -341,8 +349,6 @@ const SimulationTab: FC = () => {
 
     const runSimulation = () => {
         const _players = Array.from(players.values())
-        const _liveScore = new Map<Strategy, number[]>()
-        updateLiveScore(_liveScore)
         setSimulating(true)
 
     }
@@ -359,23 +365,6 @@ const SimulationTab: FC = () => {
 
     return (
         <div style = {{display: "flex", flexDirection: "column"}}>
-            {/* <RandomlyPositionedModal
-                show={showResult}
-                onHide={() => setShowResult(false)}
-                renderBackdrop={renderBackdrop}
-                aria-labelledby="modal-label"
-            >
-                <div style = {{display: "flex", flexDirection:"column", justifyContent:"center", alignItems:"center"}}>
-                    <h4 id="modal-label">Result</h4>
-                    <ul>
-                        {Array.from(liveScore.entries()).sort(([_a, a], [_b, b]) => {
-                            if(a.length === 0) return 1;
-                            return a[a.length - 1] < b[b.length - 1] ? 1 : -1;
-                        }).map(([k, v]) => <li>{players.get(k)!.name} - {StrategyName[players.get(k)!.strategy]}: {v.length > 0 ? v[v.length - 1] : 0}</li>)}
-                    </ul>
-                </div>
-            </RandomlyPositionedModal> */}
-
             {/*The Chart & buttons*/}
             <div style = {{display: "flex", height:"400px", marginBottom:"8px", maxWidth: "100vw"}}>
                 <div style = {{width:"100vw",border:"solid", borderWidth:"0.2px", borderRadius:"8px", borderColor:"grey"}}>
@@ -388,26 +377,6 @@ const SimulationTab: FC = () => {
                     <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetSimulation()}}>Reset Simulation</button>
                 </div>
             </div>
-
-            {/* The grid to display information of players/strategies
-            <Grid container  spacing={2}>
-                <Grid item md = {3}>
-                <div style = {{
-                    height: "80px", padding: "4px", display: "flex", flexDirection:"column",
-                    border: "solid", borderRadius:"16px", borderColor: "grey", borderWidth:"0.2px",
-                    justifyContent:"center", alignItems:"center"}}
-
-                    onClick={() => {
-                        updatePlayers()
-                    }}
-                >
-                    Add new player
-                </div>
-                </Grid>
-                {Array.from(players.values()).map(props => <Grid item key = {props.id} md = {3}>
-                    <Player {...props}/>
-                </Grid>)}
-            </Grid> */}
         </div>
     )
 }

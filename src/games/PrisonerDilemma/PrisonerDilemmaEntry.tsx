@@ -14,11 +14,11 @@ import InformationTab from "./InformationTab";
 export const  StrategiesContext = createContext<GameSettings>({
     strategiesCount: new Map<Strategy, number>(),
     updateStrategiesCount: (name: Strategy, newValue: number) => {},
-    errorProbability: 0,
+    errorPercentage: 20, // In percentage a.k.a x => x%
     updateErrorProb: (newProb: number) => {},
-    replaceAmount: 10,
+    replaceAmount: 20,
     updateReplaceAmount: (newVal: number) => {},
-    numRoundPerMatch: 10,
+    numRoundPerMatch: 20,
     updateNumRoundPerMatch: (newRound: number) => {},
 })
 
@@ -46,7 +46,7 @@ const PrisonerDilemmaEntry: FC = () => {
                     return _newMap
                 })
             },
-            errorProbability: errorProbability,
+            errorPercentage: errorProbability,
             updateErrorProb: (newProb: number) => updateErrorProb(newProb),
             replaceAmount: replaceAmount,
             updateReplaceAmount: (newVal: number) => updateReplaceAmount(newVal),
