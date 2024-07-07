@@ -5,7 +5,7 @@ import Tab from '@mui/material/Tab';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
-import SimulationTab from "./SimulationTab";
+import SimulationTab from "./SimulationTab/SimulationTab";
 import { Strategy } from "./Strategy";
 import SettingTab, { GameSettings } from "./SettingTab";
 import InformationTab from "./InformationTab";

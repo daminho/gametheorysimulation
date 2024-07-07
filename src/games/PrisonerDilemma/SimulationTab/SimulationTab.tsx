@@ -1,9 +1,10 @@
 import React, {FC, useContext, useEffect, useState} from "react";
-import VisualizeChart, { ChartDataInfoProps } from "../../components/VisualizeChart";
-import {NameToEnumStrategy, Strategy, StrategyName} from "./Strategy";
+import VisualizeChart, { ChartDataInfoProps } from "../../../components/VisualizeChart";
+import {NameToEnumStrategy, Strategy, StrategyPropsMap} from "../Strategy";
 import { Grid, styled } from "@mui/material";
 import { Modal } from "react-overlays";
-import { StrategiesContext } from "./PrisonerDilemmaEntry";
+import { StrategiesContext } from "../PrisonerDilemmaEntry";
+import { ChartDisplayer } from "./ChartDisplayer";
 
 
 const payoff = [[[3, 3],[0, 5]],[[5, 0],[1, 1]]]
@@ -53,8 +54,9 @@ const SimulationTab: FC = () => {
 
     
 
-    const [chartData, setChartData] = useState<ChartDataInfoProps[]>([]);
-    const [liveScore, updateLiveScore] = useState<Map<Strategy, number[]>>(new Map<Strategy, number[]>());
+    const [proportionChartData, updateProportionChatData] = useState<ChartDataInfoProps[]>([]);
+    const [countChartData, updateCountChartData] = useState<ChartDataInfoProps[]>([]);
+    const [liveScore, updateLiveScore] = useState<Map<Strategy, [number[], number[]]>>(new Map<Strategy, [number[], number[]]>());
     const [showResult, setShowResult] = useState<boolean>(false)
 
     const [isSimulating, setSimulating] = useState<boolean>(false)
@@ -63,14 +65,23 @@ const SimulationTab: FC = () => {
 
     useEffect(() => {
         let entries = Array.from(liveScore.entries())
-        setChartData(entries.map(([k, v]) => {
-            let _name = StrategyName[k.valueOf()]
+        updateProportionChatData(entries.map(([k, v]) => {
+            let _name = StrategyPropsMap.get(k)?.name ?? "NO NAME"
             return {
                 label: _name,
-                values: v,
-                lineColor: strategiesColor.get(k) ?? "black"
+                values: v[0],
+                lineColor: StrategyPropsMap.get(k)?.color ?? "black"
             }
         }))
+        updateCountChartData(entries.map(([k, v]) => {
+            let _name = StrategyPropsMap.get(k)?.name ?? "NO NAME"
+            return {
+                label: _name,
+                values: v[1],
+                lineColor: StrategyPropsMap.get(k)?.color ?? "black"
+            }
+        }))
+        
     }, [liveScore])
 
 
@@ -97,14 +108,16 @@ const SimulationTab: FC = () => {
 
     }
 
-    const _handleNewPercentage = (_percentage: Map<Strategy, number>) => {
+    const _handleNewCount = (_scoreCounts: Map<Strategy, number>) => {
+        let _percentages = getPercentage(_scoreCounts)
         updateLiveScore((_liveScore) => {
-            let _newLiveScore = new Map<Strategy, number[]>(_liveScore)
+            let _newLiveScore = new Map<Strategy, [number[], number[]]>(_liveScore)
             let _tmp = []
-            Array.from(_percentage.entries()).forEach(([k, v]) => {
-                _tmp = _newLiveScore.get(k) ?? []
-                let _last = _tmp.length > 0 ? _tmp[_tmp.length - 1] : 0
-                _newLiveScore.set(k, _tmp.concat(v))
+            Array.from(_percentages.keys()).forEach((k) => {
+                _tmp = _newLiveScore.get(k) ?? [[], []] as [number[], number[]]
+                let _percentage = _percentages.get(k) ?? 0
+                let _count = _scoreCounts.get(k) ?? 0
+                _newLiveScore.set(k, [_tmp[0].concat(_percentage), _tmp[1].concat(_count)])
             })
             return _newLiveScore
         })
@@ -126,38 +139,9 @@ const SimulationTab: FC = () => {
             })
             return _newPlayers
         })
-        let _strategiesColor = new Map<Strategy, string>()
-        Array.from(strategiesContext.strategiesCount.keys()).forEach((_key) => {
-            _strategiesColor.set(_key, randomColor())
-        })
-
-        let _percentage = getPercentage(strategiesContext.strategiesCount)
-
-        _handleNewPercentage(_percentage)
+        _handleNewCount(strategiesContext.strategiesCount)
 
     }, [strategiesContext.strategiesCount])
-
-
-
-    const randomColor = () => {
-        let _cac = [140, 140, 140]
-        let _x = Math.random()
-        if(_x * 99 < 33) {
-            _cac[0] += Math.random() * 50 + Math.random() * 50
-            _cac[Math.random() < 0.5 ? 1 : 2] += Math.random() * 30 + Math.random() * 30
-        } else if(_x * 99 < 66) {
-            _cac[1] += Math.random() * 50 + Math.random() * 50
-            _cac[Math.random() < 0.5 ? 2 : 0] += Math.random() * 30 + Math.random() * 30
-        } else {
-            _cac[2] += Math.random() * 50 + Math.random() * 50
-            _cac[Math.random() < 0.5 ? 0 : 1] += Math.random() * 30 + Math.random() * 30
-        }
-        let _tmp = "";
-        for(let i = 0; i < 3; i++) {
-            _tmp += Math.round(_cac[i]).toString(16)
-        }
-        return ("#" + _tmp)
-    }
 
 
 
@@ -165,7 +149,9 @@ const SimulationTab: FC = () => {
     const init = (_s: Strategy) => {
         switch(_s) {
             case Strategy.ALL_CHEAT:
-                return 1
+            case Strategy.PSYCHO:
+                return 1;
+            case Strategy.SECRETE:
             case Strategy.RANDOM:
                 return (Math.random() < 0.5 ? 0 : 1);
             default:
@@ -207,6 +193,10 @@ const SimulationTab: FC = () => {
                 case Strategy.SECRETE:
                 case Strategy.RANDOM:
                     return (Math.random() < 0.5 ? 0 : 1);
+                case Strategy.PSYCHO:
+                    return 1 - opLast;
+                case Strategy.PAVLOV:
+                    return opLast == selfLast ? 1 : 0;
             }
         }
 
@@ -330,8 +320,7 @@ const SimulationTab: FC = () => {
             });
 
             updatePlayers(_players);
-            let _percentage = getPercentage(_newLocalStrategiesCount)
-            _handleNewPercentage(_percentage)
+            _handleNewCount(_newLocalStrategiesCount)
 
          
             setCurGameDay(day - 1)
@@ -354,21 +343,22 @@ const SimulationTab: FC = () => {
     }
 
     const resetSimulation = () => {
-        updateLiveScore(new Map<Strategy, number[]>())
+        updateLiveScore(new Map<Strategy, [number[], number[]]>())
         setSimulating(false)
         setShowResult(false)
     }
 
 
-    const renderBackdrop = (props: any) => <Backdrop {...props} />;
 
 
     return (
         <div style = {{display: "flex", flexDirection: "column"}}>
             {/*The Chart & buttons*/}
-            <div style = {{display: "flex", height:"400px", marginBottom:"8px", maxWidth: "100vw"}}>
-                <div style = {{width:"100vw",border:"solid", borderWidth:"0.2px", borderRadius:"8px", borderColor:"grey"}}>
-                    <VisualizeChart  xlabels={Array.from({length: chartData[0]?.values.length ?? 0}, (_, i) => i + 1)} datas={chartData} />
+            <div style = {{display: "flex", marginBottom:"8px", maxWidth: "100vw"}}>
+                <div style = {{width:"100vw", display: "flex", flexDirection: "column", alignContent:'space-evenly'}}>
+                    <ChartDisplayer chartData={proportionChartData} chartName="Strategy Proportion"></ChartDisplayer>
+                    <div style = {{height: "16px"}}></div>
+                    <ChartDisplayer chartData={countChartData} chartName="Strategy Count"></ChartDisplayer>
                 </div>
                 <div style = {{"display": "flex", "flexDirection": "column"}}>
                     <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {runSimulation()}}>Run Simulation</button>
