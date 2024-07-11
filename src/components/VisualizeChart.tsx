@@ -30,14 +30,12 @@ const VisualizeChart: FC<VisualizeChartProps> = ({ xlabels, datas }) => {
   
 
 
-    const [maxValue, setMaxValue] = useState<number>(0)  
-    const [minValue, setMinValue] = useState<number>(0)  
     const [options, updateOptions] = useState<any>({
       maintainAspectRatio: false,
       scales: {
         y: {
-          min: 1,
-          max: 1050,
+          min: 0,
+          max: 100,
         },
       },
       plugins: {
@@ -47,23 +45,6 @@ const VisualizeChart: FC<VisualizeChartProps> = ({ xlabels, datas }) => {
       },
     })    
 
-
-    useEffect(() => {
-      updateOptions({
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            min: Math.max(minValue * 2, minValue - 50),
-            max: Math.min(maxValue * 2, maxValue + 50),
-          },
-        },
-        plugins: {
-          legend: {
-            display: false,
-          },
-        }
-      })
-    }, [maxValue])
 
     
     const _data = {
@@ -79,20 +60,6 @@ const VisualizeChart: FC<VisualizeChartProps> = ({ xlabels, datas }) => {
         }
       })
     }
-
-    useEffect(() => {
-      let _max = 0
-      let _min = 1
-      datas.forEach((info) => {
-        for(let i = 0; i < info.values.length; i++) {
-          _max = Math.max(_max, info.values[i])
-          _min = Math.min(_min, info.values[i])
-        }
-      })
-      setMaxValue(_max)
-      setMinValue(_min)
-      
-    }, [xlabels, datas])
   
     return (
       <div style={chartContainerStyle}>

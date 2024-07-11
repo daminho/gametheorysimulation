@@ -2,6 +2,7 @@ import React, { FC, useContext, useEffect, useState } from "react";
 import { Strategy, NameToEnumStrategy, StrategyPropsMap} from "./Strategy";
 import { Slider, Stack } from "@mui/material";
 import { StrategiesContext } from "./PrisonerDilemmaEntry";
+import { PieChart } from '@mui/x-charts/PieChart';
 
 
 export interface GameSettings {
@@ -41,73 +42,100 @@ const SettingTab: FC = () => {
 
 
     return (
-        <div style = {{display:"flex", flexDirection: "column"}}>
-            <a style = {{fontWeight:"bold"}}>Strategy Setting</a>
-            {Array.from(StrategyPropsMap.values()).map((props) => {
-                let name = props.name
-                let _strategy: Strategy = NameToEnumStrategy.get(name) ?? Strategy.RANDOM
-                return (
-                    <Stack key = {name} direction="row">
-                        <a style = {{width: "100px", marginRight: "4px"}}>{name}</a>
-                        <a>0</a>
-                        <Slider
-                            sx = {{
-                                marginLeft: "8px",
-                                marginRight: "8px",
-                                maxWidth: "600px"
-                            }}
-                            onChange={(e: Event, newValue: number | number[]) => strategiesContext.updateStrategiesCount(_strategy, newValue as number)}
-                            aria-label="Strategy Count"
-                            value={strategiesContext.strategiesCount.get(_strategy) ?? 0}
-                            valueLabelDisplay="auto"
-                            marks
-                            min={0}
-                            max={25}
-                        />
-                        <a>25</a>
-                        <div style = {{width: "200px", marginLeft: "4px"}}>% of population: {percentage.get(_strategy) ?? 0}%</div>
-                    </Stack>
+        <div style = {{display: "flex", flexDirection: "row", width: "100%"}}>
+            <div style = {{display:"flex", flexDirection: "column",  width: "100%"}}>
+                <a style = {{fontWeight:"bold", marginBottom: "12px"}}>Strategy Setting</a>
+                {Array.from(StrategyPropsMap.values()).map((props) => {
+                    let name = props.name
+                    let _strategy: Strategy = NameToEnumStrategy.get(name) ?? Strategy.RANDOM
+                    return (
+                        <Stack key = {name} direction="row">
+                            <a style = {{width: "100px", marginRight: "12px"}}>{name}</a>
+                            <a>0</a>
+                            <Slider
+                                sx = {{
+                                    marginLeft:  "16px",
+                                    marginRight: "16px",
+                                    maxWidth: "600px",
+                                    color: StrategyPropsMap.get(_strategy)?.color
+                                }}
+                                onChange={(e: Event, newValue: number | number[]) => strategiesContext.updateStrategiesCount(_strategy, newValue as number)}
+                                aria-label="Strategy Count"
+                                value={strategiesContext.strategiesCount.get(_strategy) ?? 0}
+                                valueLabelDisplay="auto"
+                                marks
+                                min={0}
+                                max={25}
+                            />
+                            <a>25</a>
+                        </Stack>
+                    )}
                 )}
-            )}
-            <a style = {{fontWeight:"bold"}}>Additional Setting</a>
-            <Stack direction="row">
-                <a style = {{width: "100px", marginRight: "4px"}}>Error Percentage</a>
-                <a>0</a>
-                <Slider
-                    sx = {{
-                        marginLeft: "8px",
-                        marginRight: "8px",
-                        maxWidth: "600px"
-                    }}
-                    onChange={(e: Event, newValue: number | number[]) => strategiesContext.updateErrorProb(newValue as number)}
-                    aria-label="Error Percentage"
-                    value={strategiesContext.errorPercentage}
-                    valueLabelDisplay="auto"
-                    marks
-                    min={0}
-                    max={100}
-                />
-                <a>100</a>
-            </Stack>
-            <Stack direction="row">
-                <a style = {{width: "100px", marginRight: "4px"}}>Number of players to be replaced</a>
-                <a>0</a>
-                <Slider
-                    sx = {{
-                        marginLeft: "8px",
-                        marginRight: "8px",
-                        maxWidth: "600px"
-                    }}
-                    onChange={(e: Event, newValue: number | number[]) => strategiesContext.updateReplaceAmount(newValue as number)}
-                    aria-label="Error Percentage"
-                    value={strategiesContext.replaceAmount}
-                    valueLabelDisplay="auto"
-                    marks
-                    min={0}
-                    max={25}
-                />
-                <a>25</a>
-            </Stack>
+                <a style = {{fontWeight:"bold", marginBottom: "12px"}}>Additional Setting</a>
+                <Stack direction="row">
+                    <a style = {{width: "100px", marginRight: "12px"}}>Error Percentage</a>
+                    <a>0</a>
+                    <Slider
+                        sx = {{
+                            marginLeft:  "16px",
+                            marginRight: "16px",
+                            maxWidth: "600px"
+                        }}
+                        onChange={(e: Event, newValue: number | number[]) => strategiesContext.updateErrorProb(newValue as number)}
+                        aria-label="Error Percentage"
+                        value={strategiesContext.errorPercentage}
+                        valueLabelDisplay="auto"
+                        marks
+                        min={0}
+                        max={100}
+                    />
+                    <a>100</a>
+                </Stack>
+                <Stack direction="row">
+                    <a style = {{width: "100px", marginRight: "12px"}}>Number of players to be replaced</a>
+                    <a>0</a>
+                    <Slider
+                        sx = {{
+                            marginLeft: "16px",
+                            marginRight: "16px",
+                            maxWidth: "600px"
+                        }}
+                        onChange={(e: Event, newValue: number | number[]) => strategiesContext.updateReplaceAmount(newValue as number)}
+                        aria-label="Error Percentage"
+                        value={strategiesContext.replaceAmount}
+                        valueLabelDisplay="auto"
+                        marks
+                        min={0}
+                        max={25}
+                    />
+                    <a>25</a>
+                </Stack>
+            </div>
+            <div id = "pie-chart" style = {{width: "100%", display: "flex", flexDirection: "column"}}>
+                <a style = {{fontWeight: "bold"}}>Percentage of Population</a>
+                <PieChart
+                    colors = {Array.from(percentage.entries()).map(([k, v], index) => {
+                        return StrategyPropsMap.get(k)?.color ?? "black"
+                    })}
+                    
+                    series={[
+                        {
+                        data: Array.from(percentage.entries()).map(([k, v], index) => {
+                            return {
+                                "id": index, "value": v, "label" : StrategyPropsMap.get(k)?.name ?? ""
+                            }
+                        }),
+                        innerRadius: 30,
+                        outerRadius: 100,
+                        paddingAngle: 1,
+                        cornerRadius: 5,
+                        startAngle: 0,
+                        endAngle: 360,
+                        }
+                    ]}>
+
+                </PieChart>
+            </div>
         </div>
     )
 }

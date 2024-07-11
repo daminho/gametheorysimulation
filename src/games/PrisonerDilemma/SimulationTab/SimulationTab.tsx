@@ -72,15 +72,8 @@ const SimulationTab: FC = () => {
                 values: v[0],
                 lineColor: StrategyPropsMap.get(k)?.color ?? "black"
             }
-        }))
-        updateCountChartData(entries.map(([k, v]) => {
-            let _name = StrategyPropsMap.get(k)?.name ?? "NO NAME"
-            return {
-                label: _name,
-                values: v[1],
-                lineColor: StrategyPropsMap.get(k)?.color ?? "black"
-            }
-        }))
+        }) as ChartDataInfoProps[])
+        
         
     }, [liveScore])
 
@@ -124,23 +117,8 @@ const SimulationTab: FC = () => {
     }
 
     useEffect(() => {
-        resetSimulation()
-        updatePlayers((_players) => {
-            let _newPlayers: PlayerProps[] = []
-            Array.from(strategiesContext.strategiesCount.entries()).forEach(([_strategy, _cnt]) => {
-                for(let i = 0; i < _cnt; i++) {
-                    const _id = _newPlayers.length
-                    _newPlayers.push({
-                        strategy: _strategy,
-                        id: _id,
-                        score: 0
-                    })
-                }
-            })
-            return _newPlayers
-        })
-        _handleNewCount(strategiesContext.strategiesCount)
-
+        setSimulating(false);
+        resetScore();
     }, [strategiesContext.strategiesCount])
 
 
@@ -342,8 +320,29 @@ const SimulationTab: FC = () => {
 
     }
 
-    const resetSimulation = () => {
+
+
+    const resetScore = () => {
         updateLiveScore(new Map<Strategy, [number[], number[]]>())
+        updatePlayers((_players) => {
+            let _newPlayers: PlayerProps[] = []
+            Array.from(strategiesContext.strategiesCount.entries()).forEach(([_strategy, _cnt]) => {
+                for(let i = 0; i < _cnt; i++) {
+                    const _id = _newPlayers.length
+                    _newPlayers.push({
+                        strategy: _strategy,
+                        id: _id,
+                        score: 0
+                    })
+                }
+            })
+            return _newPlayers
+        })
+        _handleNewCount(strategiesContext.strategiesCount)
+    }
+
+    const resetSimulation = () => {
+        resetScore();
         setSimulating(false)
         setShowResult(false)
     }
@@ -357,8 +356,8 @@ const SimulationTab: FC = () => {
             <div style = {{display: "flex", marginBottom:"8px", maxWidth: "100vw"}}>
                 <div style = {{width:"100vw", display: "flex", flexDirection: "column", alignContent:'space-evenly'}}>
                     <ChartDisplayer chartData={proportionChartData} chartName="Strategy Proportion"></ChartDisplayer>
-                    <div style = {{height: "16px"}}></div>
-                    <ChartDisplayer chartData={countChartData} chartName="Strategy Count"></ChartDisplayer>
+                    {/* <div style = {{height: "16px"}}></div>
+                    <ChartDisplayer chartData={countChartData} chartName="Strategy Count"></ChartDisplayer> */}
                 </div>
                 <div style = {{"display": "flex", "flexDirection": "column"}}>
                     <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {runSimulation()}}>Run Simulation</button>
