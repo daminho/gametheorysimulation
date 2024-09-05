@@ -57,12 +57,12 @@ const PrisonerDilemmaEntry: FC = () => {
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <TabList onChange={handleChangeTab} aria-label="lab API tabs example">
                 <Tab label="Simulation" value="simulation" />
-                <Tab label="Settings" value="simulation_setting" />
+                {/* <Tab label="Settings" value="simulation_setting" /> */}
                 <Tab label="Information" value="infos" />
                 </TabList>
             </Box>
                 <TabPanel value="simulation"><SimulationTab/></TabPanel>
-                <TabPanel value="simulation_setting"><SettingTab/></TabPanel>
+                {/* <TabPanel value="simulation_setting"><SettingTab/></TabPanel> */}
                 <TabPanel value="infos"><InformationTab/></TabPanel>
             </TabContext>
         </StrategiesContext.Provider>

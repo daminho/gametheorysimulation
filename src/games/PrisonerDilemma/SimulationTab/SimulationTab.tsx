@@ -5,6 +5,7 @@ import { Grid, styled } from "@mui/material";
 import { Modal } from "react-overlays";
 import { StrategiesContext } from "../PrisonerDilemmaEntry";
 import { ChartDisplayer } from "./ChartDisplayer";
+import SettingTab from "../SettingTab";
 
 
 const payoff = [[[3, 3],[0, 5]],[[5, 0],[1, 1]]]
@@ -366,6 +367,7 @@ const SimulationTab: FC = () => {
                     <button style = {{width:"200px", height: "100px", marginLeft: "8px"}} onClick={() => {resetSimulation()}}>Reset Simulation</button>
                 </div>
             </div>
+            <SettingTab/>
         </div>
     )
 }
