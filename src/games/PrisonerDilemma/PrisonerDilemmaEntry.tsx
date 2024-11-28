@@ -25,6 +25,8 @@ export const  StrategiesContext = createContext<GameSettings>({
 const PrisonerDilemmaEntry: FC = () => {
 
 
+    const x = 10;
+
     const [tabValue, updateTabValue] = useState("simulation");
 
     const [strategiesCount, updateStrategiesCount] = useState<Map<Strategy, number>>(new Map<Strategy, number>());
