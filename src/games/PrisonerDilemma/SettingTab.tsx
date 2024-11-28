@@ -20,7 +20,7 @@ export interface GameSettings {
 const SettingTab: FC = () => {
 
     const strategiesContext = useContext(StrategiesContext);
-
+    const y = 10;
 
     const getPercentage = (strategiesCount: Map<Strategy, number>) => {
         let sum = 0;
