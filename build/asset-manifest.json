@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/gametheorysimulation/static/css/main.f855e6bc.css",
-    "main.js": "/gametheorysimulation/static/js/main.c0a679e2.js",
-    "static/js/453.5ae80e94.chunk.js": "/gametheorysimulation/static/js/453.5ae80e94.chunk.js",
-    "index.html": "/gametheorysimulation/index.html",
-    "main.f855e6bc.css.map": "/gametheorysimulation/static/css/main.f855e6bc.css.map",
-    "main.c0a679e2.js.map": "/gametheorysimulation/static/js/main.c0a679e2.js.map",
-    "453.5ae80e94.chunk.js.map": "/gametheorysimulation/static/js/453.5ae80e94.chunk.js.map"
+    "main.css": "/static/css/main.f855e6bc.css",
+    "main.js": "/static/js/main.a18a0f3b.js",
+    "static/js/453.5ae80e94.chunk.js": "/static/js/453.5ae80e94.chunk.js",
+    "index.html": "/index.html",
+    "main.f855e6bc.css.map": "/static/css/main.f855e6bc.css.map",
+    "main.a18a0f3b.js.map": "/static/js/main.a18a0f3b.js.map",
+    "453.5ae80e94.chunk.js.map": "/static/js/453.5ae80e94.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.f855e6bc.css",
-    "static/js/main.c0a679e2.js"
+    "static/js/main.a18a0f3b.js"
   ]
 }
